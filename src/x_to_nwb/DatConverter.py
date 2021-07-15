@@ -356,19 +356,33 @@ class DatConverter:
 
         if not self.bundle.header.IsLittleEndian:
             raise ValueError("Not tested with BigEndian data from a Mac.")
-        elif not self.bundle.amp:
-            raise ValueError("The amp tree does not exist.")
         elif not self.bundle.pul:
             raise ValueError("The pul tree does not exist.")
         elif not self.bundle.data:
             raise ValueError("The data element does not exist.")
-        elif len(self.bundle.amp) < 1 or len(self.bundle.amp[0]) < 1:
-            raise ValueError("Unexpected amplifier tree structure.")
+
+        # if data in new amp format, check for amp trees, otherwise skip
+        version = int(self.bundle.header.Version.split("v2x")[1][:2])
+        if version < 90:
+            warnings.warn(
+                f"Skipping amp check because '{self.bundle.header.Version}' "
+                "does not contain a separate amp structure."
+            )
+        else:
+            if not self.bundle.amp:
+                raise ValueError("The amp tree does not exist.")
+            elif len(self.bundle.amp) < 1 or len(self.bundle.amp[0]) < 1:
+                raise ValueError("Unexpected amplifier tree structure.")
 
         # check that the used device is unique
-        deviceString = DatConverter._formatDeviceString(self.bundle.amp[0][0])
+        if self.bundle.amp is not None:
+            amp_info = self.bundle.amp
+        else:
+            amp_info = self.bundle.pul
 
-        for series_index, series in enumerate(self.bundle.amp):
+        deviceString = DatConverter._formatDeviceString(amp_info[0][0])
+
+        for series_index, series in enumerate(amp_info):
             for state_index, state in enumerate(series):
 
                 # skip invalid entries
@@ -428,14 +442,17 @@ class DatConverter:
 
     def _createDevice(self):
         """
-        Create a pynwb Device object from the DAT file contents.
+        Create a pynwb Device object from the DAT file contents if one exists.
 
         Returns
         -------
         pynwb.Device
         """
-
-        name = DatConverter._formatDeviceString(self.bundle.amp[0][0])
+        if self.bundle.amp is not None:
+            amp_info = self.bundle.amp
+        else:
+            amp_info = self.bundle.pul
+        name = DatConverter._formatDeviceString(amp_info[0][0])
 
         return Device(name)
 
