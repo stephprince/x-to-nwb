@@ -1,5 +1,7 @@
 # python
 __pycache__/
+.idea/
+.ipynb_checkpoints/
 
 # setuptools
 build/
@@ -8,3 +10,4 @@ dist/
 
 tests/data/*.nwb
 tests/data/*.html
+
