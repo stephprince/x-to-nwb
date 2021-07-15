@@ -1,4 +1,5 @@
 import numpy as np
+import warnings
 
 from .hr_segments import getSegmentClass
 from .conversion_utils import getChannelRecordIndex, getStimulusRecordIndex
@@ -52,8 +53,9 @@ class StimSetGenerator:
             stimRec = self.bundle.pgf[stimRec_idx]
             channelRec = stimRec[channelRec_index]
 
-            if stimRec.ActualDacChannels != 1:
-                raise ValueError(
+
+            if stimRec.ActualDacChannels != 1: # TODO - more robust support for ActualDacChannels > 1
+                warnings.warn(
                     f"Unsupported ActualDacChannels lengths for "
                     f"sweep index {stimRec_idx} and ChannelRecord index {channelRec_index}."
                 )
