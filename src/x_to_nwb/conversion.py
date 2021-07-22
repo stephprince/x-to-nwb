@@ -1,3 +1,4 @@
+import glob
 import os
 import sys
 import argparse
@@ -73,12 +74,14 @@ def convert(
         root = os.path.join(inFileOrFolder, "..", os.path.basename(inFileOrFolder))
 
     outFile = root + ".nwb"
+    matchingFiles = glob.glob(root + "*.nwb")
 
-    if not outputMetadata and os.path.exists(outFile):
+    if not outputMetadata and matchingFiles:
         if overwrite:
-            os.remove(outFile)
+            for f in matchingFiles:
+                os.remove(f)
         else:
-            raise ValueError(f"The output file {outFile} does already exist.")
+            raise ValueError(f"The output file(s) {matchingFiles} already exist.")
 
     if ext == ".abfv1":
         if outputMetadata:

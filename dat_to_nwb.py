@@ -6,4 +6,4 @@ fname_metadata = "/Users/stephanieprince/Desktop/GSoCproject/GSoC_2021_OSB_NWB/n
 
 metadata = np.load(fname_metadata,allow_pickle='TRUE').item()
 
-convert(fname_dat, existingNWBData=metadata) # TO DO - add metadata as optional arg, change _createFile_ section of DatConverter
+convert(fname_dat, existingNWBData=metadata, overwrite=True)
