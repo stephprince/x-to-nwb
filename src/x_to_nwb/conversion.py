@@ -24,6 +24,7 @@ def convert(
     discardChannelList=None,
     acquisitionChannelName=None,
     stimulusChannelName=None,
+    existingNWBData=None
 ):
     """
     Convert the given file to a NeuroDataWithoutBorders file using pynwb
@@ -44,6 +45,7 @@ def convert(
     :param discardChannelList: ADC channels to not write into the NWB file (ABFv2 only)
     :param acquisitionChannelName: Output only that channel as acquisition channel (ABFv1 only)
     :param stimulusChannelName: Output only that channel as stimulation channel (ABFv1 only)
+    :param addExistingNWBData: Add NWB metadata input that will be used in NWB file creation
 
     :return: path of the created NWB file
     """
@@ -106,7 +108,11 @@ def convert(
         if outputMetadata:
             DatConverter.outputMetadata(inFileOrFolder)
         else:
-            DatConverter(inFileOrFolder, outFile, multipleGroupsPerFile=multipleGroupsPerFile, compression=compression)
+            DatConverter(inFileOrFolder,
+                         outFile,
+                         multipleGroupsPerFile=multipleGroupsPerFile,
+                         compression=compression,
+                         existingNWBData=existingNWBData)
 
     else:
         raise ValueError(f"The extension {ext} is currently not supported.")

@@ -10,6 +10,7 @@ import numpy as np
 from pynwb.device import Device
 from pynwb import NWBHDF5IO, NWBFile
 from pynwb.icephys import IntracellularElectrode
+from pynwb.file import Subject
 
 from .hr_bundle import Bundle
 from .hr_stimsetgenerator import StimSetGenerator
@@ -32,7 +33,7 @@ log = logging.getLogger(__name__)
 
 
 class DatConverter:
-    def __init__(self, inFile, outFile, multipleGroupsPerFile=False, compression=True):
+    def __init__(self, inFile, outFile, multipleGroupsPerFile=False, compression=True, existingNWBData=False):
         """
         Convert DAT files, created by PatchMaster, to NWB v2 files.
 
@@ -43,6 +44,7 @@ class DatConverter:
         multipleGroupsPerFile: switch determining if multiple DAT groups per
                                file are created or not
         compression: Toggle compression for HDF5 datasets
+        addExistingNWBData: input to add  NWB metadata input that will be used in NWB file creation
 
         Returns
         -------
@@ -54,6 +56,7 @@ class DatConverter:
 
         self.bundle = Bundle(inFile)
         self.compression = compression
+        self.existingNWBData = existingNWBData
 
         self._check()
 
@@ -419,23 +422,42 @@ class DatConverter:
         pynwb.NWBFile
         """
 
-        session_description = PLACEHOLDER
+        # values defined by the conversion script no matter what inputs
         identifier = sha256(b"%d_" % self.bundle.header.Time + str.encode(datetime.now().isoformat())).hexdigest()
         self.session_start_time = DatConverter._convertTimestamp(self.bundle.header.Time)
         creatorName = "PatchMaster"
         creatorVersion = self.bundle.header.Version
-        experiment_description = f"{creatorName} {creatorVersion}"
+        notes = f"data generated with {creatorName} {creatorVersion}"
         source_script_file_name = "conversion.py"
         source_script = json.dumps(getPackageInfo(), sort_keys=True, indent=4)
-        session_id = PLACEHOLDER
+
+        # values defined by user or place holder used if needed
+        metadata = self.existingNWBData
+
+        subject = Subject(
+            species= metadata.get('species') or PLACEHOLDER,
+            genotype=metadata.get('genotype') or PLACEHOLDER,
+            subject_id=metadata.get('subject_id') or PLACEHOLDER,
+            description=metadata.get('subject_description') or PLACEHOLDER
+        )
 
         return NWBFile(
-            session_description=session_description,
+            session_description=metadata.get('session_description') or PLACEHOLDER,
             identifier=identifier,
             session_start_time=self.session_start_time,
-            experimenter=None,
-            experiment_description=experiment_description,
-            session_id=session_id,
+            experiment_description=metadata.get('experiment_description') or PLACEHOLDER,
+            lab=metadata.get('lab') or PLACEHOLDER,
+            institution=metadata.get('institution') or PLACEHOLDER,
+            related_publications=metadata.get('related_publications') or PLACEHOLDER,
+
+            # subject-related field
+            subject=subject,
+
+            # recording-related fields
+            protocol=metadata.get('protocol') or PLACEHOLDER,
+            notes=notes,
+
+            # file generation-related fields
             source_script=source_script,
             source_script_file_name=source_script_file_name,
         )
